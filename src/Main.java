@@ -2,21 +2,18 @@ package ex_race.solution;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
+import java.awt.event.*;
 import java.util.Random;
 
-class RaceEventMain {
+class DiskEvent {
     private int winner = -1;
     private long time;
 
-    public RaceEventMain(long time) {
+    public DiskEvent(long time) {
         this.time = time;
     }
 
-    public RaceEventMain(long time, int winner) {
+    public DiskEvent(long time, int winner) {
         this(time);
         this.winner = winner;
     }
@@ -30,11 +27,11 @@ class RaceEventMain {
     }
 }
 
-interface RaceListenerMain {
-    void action(RaceEventMain e);
+interface DiskListenerMain {
+    void action(DiskEvent e);
 }
 
-class JRaceMain extends JPanel implements ActionListener, MouseListener {
+class JDiskMain extends JPanel implements ActionListener, MouseListener {
     private static class Runner {
         static Random random = new Random();
         static int count = 0;
@@ -54,10 +51,10 @@ class JRaceMain extends JPanel implements ActionListener, MouseListener {
     private Runner runners[] = new Runner[10];
     private Runner stopped;
     private Timer timer;
-    private RaceListenerMain raceListener;
+    private DiskListenerMain DiskListener;
     private long startTime;
 
-    JRaceMain() {
+    JDiskMain() {
         setBackground(Color.WHITE);
         addMouseListener(this);
     }
@@ -67,7 +64,7 @@ class JRaceMain extends JPanel implements ActionListener, MouseListener {
     public void mousePressed(MouseEvent e) {
         for (int i = 0; i < runners.length; i++)
             if (runners[i] != null) {
-                Rectangle r = runnerRectangle(i, raceWidth(), racerHeight());
+                Rectangle r = runnerRectangle(i, DiskWidth(), DiskrHeight());
                 if (r.contains(e.getPoint().x, e.getPoint().y)) {
                     stopped = runners[i];
                     stopped.paused = true;
@@ -92,9 +89,9 @@ class JRaceMain extends JPanel implements ActionListener, MouseListener {
     public void mouseExited(MouseEvent e) {
     }
 
-    public void addRaceListener(RaceListenerMain l) {
+    public void addDiskListener(DiskListenerMain l) {
         // Simple implementation: only one listener at a time...
-        raceListener = l;
+        DiskListener = l;
     }
 
     public Dimension getPreferredSize() {
@@ -110,14 +107,14 @@ class JRaceMain extends JPanel implements ActionListener, MouseListener {
                     (winner == null || runners[i].position > winner.position))
                 winner = runners[i];
         }
-        if (raceListener != null)
+        if (DiskListener != null)
             if (winner != null) {
-                raceListener.action(
-                        new RaceEventMain(System.currentTimeMillis() - startTime, winner.number));
+                DiskListener.action(
+                        new DiskEvent(System.currentTimeMillis() - startTime, winner.number));
                 timer.stop();
             } else
-                raceListener.action(
-                        new RaceEventMain(System.currentTimeMillis() - startTime));
+                DiskListener.action(
+                        new DiskEvent(System.currentTimeMillis() - startTime));
         repaint();
     }
 
@@ -132,11 +129,11 @@ class JRaceMain extends JPanel implements ActionListener, MouseListener {
         startTime = System.currentTimeMillis();
     }
 
-    private int raceWidth() {
+    private int DiskWidth() {
         return getWidth() - 40; // borders
     }
 
-    private double racerHeight() {
+    private double DiskrHeight() {
         return getHeight() / (runners.length * 2 + 1.0);
     }
 
@@ -147,8 +144,8 @@ class JRaceMain extends JPanel implements ActionListener, MouseListener {
     }
 
     public void paintComponent(Graphics g) {
-        int raceWidth = raceWidth();
-        double racerHeight = racerHeight();
+        int DiskWidth = DiskWidth();
+        double DiskrHeight = DiskrHeight();
 
         super.paintComponent(g);
 
@@ -158,12 +155,12 @@ class JRaceMain extends JPanel implements ActionListener, MouseListener {
                     g.setColor(Color.GRAY);
                 else
                     g.setColor(colors[i % colors.length]);
-                Rectangle r = runnerRectangle(i, raceWidth, racerHeight);
+                Rectangle r = runnerRectangle(i, DiskWidth, DiskrHeight);
                 g.fillRect(r.x, r.y, r.width, r.height);
             }
         g.setColor(Color.BLACK);
         g.drawLine(20, 0, 20, getHeight());
-        g.drawLine(raceWidth + 20, 0, raceWidth + 20, getHeight());
+        g.drawLine(DiskWidth + 20, 0, DiskWidth + 20, getHeight());
     }
 }
 
@@ -173,17 +170,17 @@ public class Main {
         //  UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         // } catch (Exception e) { }
 
-        final JRaceMain race = new JRaceMain();
-        JFrame frame = new JFrame("Race");
+        final JDiskMain Disk = new JDiskMain();
+        JFrame frame = new JFrame("Disk");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
-        frame.getContentPane().add(race, BorderLayout.CENTER);
+        frame.getContentPane().add(Disk, BorderLayout.CENTER);
 
         JPanel south = new JPanel();
         south.setLayout(new GridLayout(0, 3));
         frame.getContentPane().add(south, BorderLayout.SOUTH);
 
-        final JLabel label = new JLabel("Race not started", JLabel.CENTER);
+        final JLabel label = new JLabel("Disk not started", JLabel.CENTER);
         final JLabel clock = new JLabel("0.0", JLabel.CENTER);
         JPanel buttonPanel = new JPanel(); // to avoid button resizing
         south.add(label);
@@ -199,18 +196,18 @@ public class Main {
         run.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 label.setText("Running...");
-                race.run();
+                Disk.run();
                 run.setEnabled(false);
             }
         });
 
-        race.addRaceListener(new RaceListenerMain() {
-            public void action(RaceEventMain e) {
+        Disk.addDiskListener(new DiskListenerMain() {
+            public void action(DiskEvent e) {
                 double time = e.getTime() / 1000.0;
                 int secs = (int) time;
                 clock.setText(secs + "." + (int) ((time - secs) * 10));
                 if (e.getWinner() != -1) {
-                    label.setText("Race won by #" + e.getWinner());
+                    label.setText("Disk won by #" + e.getWinner());
                     run.setEnabled(true);
                 }
             }

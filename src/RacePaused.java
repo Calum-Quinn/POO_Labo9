@@ -28,7 +28,7 @@ class RaceEvent {
 }
 
 interface RaceListener {
-    void action(RaceEventMain e);
+    void action(RaceEvent e);
 }
 
 class JRace extends JPanel implements ActionListener, MouseListener {
@@ -51,7 +51,7 @@ class JRace extends JPanel implements ActionListener, MouseListener {
     private Runner runners[] = new Runner[10];
     private Runner stopped;
     private Timer timer;
-    private RaceListenerMain raceListener;
+    private RaceListener raceListener;
     private long startTime;
 
     JRace() {
@@ -89,7 +89,7 @@ class JRace extends JPanel implements ActionListener, MouseListener {
     public void mouseExited(MouseEvent e) {
     }
 
-    public void addRaceListener(RaceListenerMain l) {
+    public void addRaceListener(RaceListener l) {
         // Simple implementation: only one listener at a time...
         raceListener = l;
     }
@@ -110,11 +110,11 @@ class JRace extends JPanel implements ActionListener, MouseListener {
         if (raceListener != null)
             if (winner != null) {
                 raceListener.action(
-                        new RaceEventMain(System.currentTimeMillis() - startTime, winner.number));
+                        new RaceEvent(System.currentTimeMillis() - startTime, winner.number));
                 timer.stop();
             } else
                 raceListener.action(
-                        new RaceEventMain(System.currentTimeMillis() - startTime));
+                        new RaceEvent(System.currentTimeMillis() - startTime));
         repaint();
     }
 
@@ -170,7 +170,7 @@ public class RacePaused {
         //  UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         // } catch (Exception e) { }
 
-        final JRaceMain race = new JRaceMain();
+        final JRace race = new JRace();
         JFrame frame = new JFrame("Race");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -201,8 +201,8 @@ public class RacePaused {
             }
         });
 
-        race.addRaceListener(new RaceListenerMain() {
-            public void action(RaceEventMain e) {
+        race.addRaceListener(new RaceListener() {
+            public void action(RaceEvent e) {
                 double time = e.getTime() / 1000.0;
                 int secs = (int) time;
                 clock.setText(secs + "." + (int) ((time - secs) * 10));
