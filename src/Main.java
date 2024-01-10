@@ -2,18 +2,21 @@ package ex_race.solution;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.util.Random;
 
-class RaceEvent {
+class RaceEventMain {
     private int winner = -1;
     private long time;
 
-    public RaceEvent(long time) {
+    public RaceEventMain(long time) {
         this.time = time;
     }
 
-    public RaceEvent(long time, int winner) {
+    public RaceEventMain(long time, int winner) {
         this(time);
         this.winner = winner;
     }
@@ -27,11 +30,11 @@ class RaceEvent {
     }
 }
 
-interface RaceListener {
+interface RaceListenerMain {
     void action(RaceEventMain e);
 }
 
-class JRace extends JPanel implements ActionListener, MouseListener {
+class JRaceMain extends JPanel implements ActionListener, MouseListener {
     private static class Runner {
         static Random random = new Random();
         static int count = 0;
@@ -54,7 +57,7 @@ class JRace extends JPanel implements ActionListener, MouseListener {
     private RaceListenerMain raceListener;
     private long startTime;
 
-    JRace() {
+    JRaceMain() {
         setBackground(Color.WHITE);
         addMouseListener(this);
     }
@@ -164,7 +167,7 @@ class JRace extends JPanel implements ActionListener, MouseListener {
     }
 }
 
-public class RacePaused {
+public class Main {
     public static void main(String[] args) {
         // try {
         //  UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
