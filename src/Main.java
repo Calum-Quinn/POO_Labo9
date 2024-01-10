@@ -3,27 +3,12 @@ package ex_race.solution;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Random;
+import java.util.LinkedList;
 
 class DiskEvent {
-    private int winner = -1;
-    private long time;
 
-    public DiskEvent(long time) {
-        this.time = time;
-    }
+    public DiskEvent() {
 
-    public DiskEvent(long time, int winner) {
-        this(time);
-        this.winner = winner;
-    }
-
-    public int getWinner() {
-        return winner;
-    }
-
-    public long getTime() {
-        return time;
     }
 }
 
@@ -31,62 +16,86 @@ interface DiskListenerMain {
     void action(DiskEvent e);
 }
 
-class JDiskMain extends JPanel implements ActionListener, MouseListener {
-    private static class Runner {
-        static Random random = new Random();
-        static int count = 0;
-        boolean paused = false;
+class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
+    @Override
+    public void mouseDragged(MouseEvent e) {
+        Disk disk = disks.getLast();
+        disk.setRadius(disk.getCentre().distance(e.getPoint()));
 
-        int number = count++;
-        double position = 0;
+        System.out.println("x: " + disk.centre.x + " y: " + disk.centre.y);
+    }
 
-        void move() {
-            if (!paused && position < 100)
-                position += random.nextDouble();
+    @Override
+    public void mouseMoved(MouseEvent e) {
+
+    }
+
+    private static class Disk {
+
+        private Point centre;
+        private double radius;
+
+        public double getRadius() {
+            return radius;
+        }
+
+        public void setRadius(double radius) {
+            this.radius = radius;
+        }
+
+        public Point getCentre() {
+            return centre;
+        }
+
+        public void setCentre(Point centre) {
+            this.centre = centre;
+        }
+
+        public Disk(Point centre) {
+            radius = 0;
+            this.centre = centre;
         }
     }
 
-    private static Color[] colors = {Color.RED, Color.GREEN, Color.BLUE,
+    private static final Color[] colors = {Color.RED, Color.GREEN, Color.BLUE,
             Color.BLACK, Color.MAGENTA};
-    private Runner runners[] = new Runner[10];
-    private Runner stopped;
+
+    private LinkedList<Disk> disks = new LinkedList<>();
+    private Disk stopped;
     private Timer timer;
     private DiskListenerMain DiskListener;
     private long startTime;
 
-    JDiskMain() {
+    JDisk() {
         setBackground(Color.WHITE);
         addMouseListener(this);
     }
 
     // MouseListener
 
+
+
     public void mousePressed(MouseEvent e) {
-        for (int i = 0; i < runners.length; i++)
-            if (runners[i] != null) {
-                Rectangle r = runnerRectangle(i, DiskWidth(), DiskrHeight());
-                if (r.contains(e.getPoint().x, e.getPoint().y)) {
-                    stopped = runners[i];
-                    stopped.paused = true;
-                    break;
-                }
-            }
+        disks.add(new Disk(e.getPoint()));
     }
 
     public void mouseReleased(MouseEvent e) {
-        if (stopped != null) {
-            stopped.paused = false;
-            stopped = null;
-        }
+
     }
 
+    @Override
     public void mouseClicked(MouseEvent e) {
+
     }
 
+    @Override
     public void mouseEntered(MouseEvent e) {
+
     }
 
+    @Override
     public void mouseExited(MouseEvent e) {
+
     }
 
     public void addDiskListener(DiskListenerMain l) {
@@ -99,68 +108,27 @@ class JDiskMain extends JPanel implements ActionListener, MouseListener {
     }
 
     public void actionPerformed(ActionEvent e) {
-        Runner winner = null;
 
-        for (int i = 0; i < runners.length; i++) {
-            runners[i].move();
-            if (runners[i].position >= 100 &&
-                    (winner == null || runners[i].position > winner.position))
-                winner = runners[i];
-        }
-        if (DiskListener != null)
-            if (winner != null) {
-                DiskListener.action(
-                        new DiskEvent(System.currentTimeMillis() - startTime, winner.number));
-                timer.stop();
-            } else
-                DiskListener.action(
-                        new DiskEvent(System.currentTimeMillis() - startTime));
         repaint();
     }
 
     public void run() {
-        Runner.count = 0;
 
-        for (int i = 0; i < runners.length; i++)
-            runners[i] = new Runner();
 
-        timer = new Timer(50, this);
-        timer.start();
-        startTime = System.currentTimeMillis();
     }
 
-    private int DiskWidth() {
+    private int DiskRadius() {
         return getWidth() - 40; // borders
     }
 
-    private double DiskrHeight() {
-        return getHeight() / (runners.length * 2 + 1.0);
-    }
-
-    private Rectangle runnerRectangle(int i, int maxWidth, double height) {
-        return new Rectangle(20, (int) (height * (1 + 2 * i)),
-                Math.min((int) runners[i].position, 100) *
-                        maxWidth / 100, (int) height);
-    }
-
     public void paintComponent(Graphics g) {
-        int DiskWidth = DiskWidth();
-        double DiskrHeight = DiskrHeight();
+        int diskRadius = DiskRadius();
 
         super.paintComponent(g);
 
-        for (int i = 0; i < runners.length; i++)
-            if (runners[i] != null) {
-                if (runners[i] == stopped)
-                    g.setColor(Color.GRAY);
-                else
-                    g.setColor(colors[i % colors.length]);
-                Rectangle r = runnerRectangle(i, DiskWidth, DiskrHeight);
-                g.fillRect(r.x, r.y, r.width, r.height);
-            }
         g.setColor(Color.BLACK);
         g.drawLine(20, 0, 20, getHeight());
-        g.drawLine(DiskWidth + 20, 0, DiskWidth + 20, getHeight());
+        g.drawLine(diskRadius + 20, 0, diskRadius + 20, getHeight());
     }
 }
 
@@ -170,7 +138,7 @@ public class Main {
         //  UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
         // } catch (Exception e) { }
 
-        final JDiskMain Disk = new JDiskMain();
+        final JDisk Disk = new JDisk();
         JFrame frame = new JFrame("Disk");
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 
@@ -180,36 +148,35 @@ public class Main {
         south.setLayout(new GridLayout(0, 3));
         frame.getContentPane().add(south, BorderLayout.SOUTH);
 
-        final JLabel label = new JLabel("Disk not started", JLabel.CENTER);
-        final JLabel clock = new JLabel("0.0", JLabel.CENTER);
         JPanel buttonPanel = new JPanel(); // to avoid button resizing
-        south.add(label);
-        south.add(clock);
         south.add(buttonPanel);
 
-        final JButton run = new JButton("Run");
-        buttonPanel.add(run);
+        final JButton clear = new JButton("Clear");
+        final JButton quit = new JButton("Quit");
+        buttonPanel.add(clear);
+        buttonPanel.add(quit);
 
         frame.pack();
         frame.setVisible(true);
 
-        run.addActionListener(new ActionListener() {
+        // TODO : clear disks
+        clear.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                label.setText("Running...");
-                Disk.run();
-                run.setEnabled(false);
             }
         });
 
+        quit.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                System.exit(0);
+            }
+        });
+
+        frame.pack();
+        frame.setVisible(true);
+
         Disk.addDiskListener(new DiskListenerMain() {
             public void action(DiskEvent e) {
-                double time = e.getTime() / 1000.0;
-                int secs = (int) time;
-                clock.setText(secs + "." + (int) ((time - secs) * 10));
-                if (e.getWinner() != -1) {
-                    label.setText("Disk won by #" + e.getWinner());
-                    run.setEnabled(true);
-                }
+
             }
         });
     }
