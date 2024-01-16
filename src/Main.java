@@ -4,6 +4,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.LinkedList;
+import java.util.Random;
 
 class DiskEvent {
 
@@ -17,12 +18,15 @@ interface DiskListenerMain {
 }
 
 class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
+
+    Random random = new Random();
+
     @Override
     public void mouseDragged(MouseEvent e) {
         Disk disk = disks.getLast();
         disk.setRadius(disk.getCentre().distance(e.getPoint()));
 
-        System.out.println("x: " + disk.centre.x + " y: " + disk.centre.y);
+        repaint();
     }
 
     @Override
@@ -35,12 +39,18 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
         private Point centre;
         private double radius;
 
+        private final Color color;
+
         public double getRadius() {
             return radius;
         }
 
         public void setRadius(double radius) {
             this.radius = radius;
+        }
+
+        public Color getColor() {
+            return color;
         }
 
         public Point getCentre() {
@@ -51,14 +61,16 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
             this.centre = centre;
         }
 
-        public Disk(Point centre) {
+        public Disk(Point centre, Color color) {
             radius = 0;
             this.centre = centre;
+            this.color = color;
         }
     }
 
     private static final Color[] colors = {Color.RED, Color.GREEN, Color.BLUE,
-            Color.BLACK, Color.MAGENTA};
+            Color.BLACK, Color.MAGENTA, Color.CYAN, Color.DARK_GRAY, Color.GRAY,
+            Color.LIGHT_GRAY, Color.ORANGE, Color.PINK, Color.YELLOW};
 
     private LinkedList<Disk> disks = new LinkedList<>();
     private Disk stopped;
@@ -66,9 +78,15 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
     private DiskListenerMain DiskListener;
     private long startTime;
 
+    public void clearDisks() {
+        disks.clear();
+        repaint();
+    }
+
     JDisk() {
         setBackground(Color.WHITE);
         addMouseListener(this);
+        addMouseMotionListener(this);
     }
 
     // MouseListener
@@ -76,7 +94,17 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
 
 
     public void mousePressed(MouseEvent e) {
-        disks.add(new Disk(e.getPoint()));
+        boolean alreadyDisk = false;
+        for (Disk disk : disks) {
+            if (disk.getCentre().distance(e.getPoint()) <= disk.getRadius()) {
+                alreadyDisk = true;
+                // Move disk
+            }
+        }
+        if (!alreadyDisk) {
+            disks.add(new Disk(e.getPoint(),colors[random.nextInt(colors.length)]));
+        }
+        repaint();
     }
 
     public void mouseReleased(MouseEvent e) {
@@ -122,9 +150,15 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
     }
 
     public void paintComponent(Graphics g) {
+
         int diskRadius = DiskRadius();
 
         super.paintComponent(g);
+
+        for (Disk disk : disks) {
+            g.setColor(disk.getColor());
+            g.fillOval((int)(disk.getCentre().x - disk.getRadius()), (int)(disk.getCentre().y - disk.getRadius()),(int)disk.getRadius() * 2,(int)disk.getRadius() * 2);
+        }
 
         g.setColor(Color.BLACK);
         g.drawLine(20, 0, 20, getHeight());
@@ -159,9 +193,9 @@ public class Main {
         frame.pack();
         frame.setVisible(true);
 
-        // TODO : clear disks
         clear.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
+                Disk.clearDisks();
             }
         });
 
