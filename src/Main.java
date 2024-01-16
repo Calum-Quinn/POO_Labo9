@@ -13,9 +13,8 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
     @Override
     public void mouseDragged(MouseEvent e) {
         if (e.isShiftDown()) {
-            Disk disk = container(e.getPoint());
-            if (disk != null) {
-                disk.setCentre(new Point (e.getPoint().x + Disk.getXYDiff()[0],e.getPoint().y + Disk.getXYDiff()[1]));
+            if (Disk.getCurrent().contains(e.getPoint())) {
+                Disk.getCurrent().setCentre(new Point (e.getPoint().x + Disk.getXYDiff()[0],e.getPoint().y + Disk.getXYDiff()[1]));
             }
         }
         else {
@@ -39,7 +38,9 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
         private final Color color;
 
         //Static variable used to keep the same vector between the center and the mouse while moving
-        static int[] XYDiff;
+        private static int[] XYDiff;
+
+        private static Disk current;
 
         public static int[] getXYDiff() {
             return XYDiff;
@@ -47,6 +48,14 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
 
         public static void setXYDiff(int[] XYDiff) {
             Disk.XYDiff = XYDiff;
+        }
+
+        public static void setCurrent(Disk disk) {
+            current = disk;
+        }
+
+        public static Disk getCurrent() {
+            return current;
         }
 
         public double getRadius() {
@@ -74,6 +83,10 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
             this.centre = centre;
             this.color = color;
         }
+
+        public boolean contains(Point point) {
+            return this.centre.distance(point) <= this.radius;
+        }
     }
 
     private static final Color[] colors = {Color.RED, Color.GREEN, Color.BLUE,
@@ -84,7 +97,7 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
 
     public Disk container(Point point) {
         for (int i = disks.size() - 1; i >= 0; i--) {
-            if (disks.get(i).centre.distance(point) <= disks.get(i).radius) {
+            if (disks.get(i).contains(point)) {
                 return disks.get(i);
             }
         }
@@ -108,6 +121,7 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
                 Disk disk = container(e.getPoint());
                 if (disk != null) {
                     Disk.setXYDiff(new int[]{disk.getCentre().x - e.getPoint().x, disk.getCentre().y - e.getPoint().y});
+                    Disk.setCurrent(disk);
                 }
             }
             else {
