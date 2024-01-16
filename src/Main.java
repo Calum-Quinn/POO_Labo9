@@ -6,25 +6,22 @@ import java.awt.event.*;
 import java.util.LinkedList;
 import java.util.Random;
 
-class DiskEvent {
-
-    public DiskEvent() {
-
-    }
-}
-
-interface DiskListenerMain {
-    void action(DiskEvent e);
-}
-
-class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotionListener, KeyListener {
+class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
 
     Random random = new Random();
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        Disk disk = disks.getLast();
-        disk.setRadius(disk.getCentre().distance(e.getPoint()));
+        if (e.isShiftDown()) {
+            Disk disk = container(e.getPoint());
+            if (disk != null) {
+                disk.setCentre(new Point (e.getPoint().x + Disk.getXYDiff()[0],e.getPoint().y + Disk.getXYDiff()[1]));
+            }
+        }
+        else {
+            Disk disk = disks.getLast();
+            disk.setRadius(disk.getCentre().distance(e.getPoint()));
+        }
 
         repaint();
     }
@@ -34,27 +31,23 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
 
     }
 
-    @Override
-    public void keyTyped(KeyEvent e) {
-
-    }
-
-    @Override
-    public void keyPressed(KeyEvent e) {
-
-    }
-
-    @Override
-    public void keyReleased(KeyEvent e) {
-
-    }
-
     private static class Disk {
 
         private Point centre;
         private double radius;
 
         private final Color color;
+
+        //Static variable used to keep the same vector between the center and the mouse while moving
+        static int[] XYDiff;
+
+        public static int[] getXYDiff() {
+            return XYDiff;
+        }
+
+        public static void setXYDiff(int[] XYDiff) {
+            Disk.XYDiff = XYDiff;
+        }
 
         public double getRadius() {
             return radius;
@@ -87,11 +80,16 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
             Color.BLACK, Color.MAGENTA, Color.CYAN, Color.DARK_GRAY, Color.GRAY,
             Color.LIGHT_GRAY, Color.ORANGE, Color.PINK, Color.YELLOW};
 
-    private LinkedList<Disk> disks = new LinkedList<>();
-    private Disk stopped;
-    private Timer timer;
-    private DiskListenerMain DiskListener;
-    private long startTime;
+    private final LinkedList<Disk> disks = new LinkedList<>();
+
+    public Disk container(Point point) {
+        for (int i = disks.size() - 1; i >= 0; i--) {
+            if (disks.get(i).centre.distance(point) <= disks.get(i).radius) {
+                return disks.get(i);
+            }
+        }
+        return null;
+    }
 
     public void clearDisks() {
         disks.clear();
@@ -104,52 +102,45 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
         addMouseMotionListener(this);
     }
 
-    // MouseListener
-
-
-
     public void mousePressed(MouseEvent e) {
-        disks.add(new Disk(e.getPoint(),colors[random.nextInt(colors.length)]));
-        repaint();
+        if (SwingUtilities.isLeftMouseButton(e)) {
+            if (e.isShiftDown()) {
+                Disk disk = container(e.getPoint());
+                if (disk != null) {
+                    Disk.setXYDiff(new int[]{disk.getCentre().x - e.getPoint().x, disk.getCentre().y - e.getPoint().y});
+                }
+            }
+            else {
+                disks.add(new Disk(e.getPoint(),colors[random.nextInt(colors.length)]));
+                repaint();
+            }
+        }
     }
 
-    public void mouseReleased(MouseEvent e) {
-
-    }
+    public void mouseReleased(MouseEvent e) {}
 
     @Override
     public void mouseClicked(MouseEvent e) {
-
+        if (SwingUtilities.isRightMouseButton(e)) {
+            Disk disk = container(e.getPoint());
+            if (disk != null) {
+                disks.remove(disk);
+                repaint();
+            }
+        }
     }
 
     @Override
-    public void mouseEntered(MouseEvent e) {
-
-    }
+    public void mouseEntered(MouseEvent e) {}
 
     @Override
-    public void mouseExited(MouseEvent e) {
-
-    }
-
-    public void addDiskListener(DiskListenerMain l) {
-        // Simple implementation: only one listener at a time...
-        DiskListener = l;
-    }
+    public void mouseExited(MouseEvent e) {}
 
     public Dimension getPreferredSize() {
         return new Dimension(640, 480);
     }
 
-    public void actionPerformed(ActionEvent e) {
-
-        repaint();
-    }
-
-    public void run() {
-
-
-    }
+    public void actionPerformed(ActionEvent e) {}
 
     private int DiskRadius() {
         return getWidth() - 40; // borders
@@ -174,9 +165,6 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
 
 public class Main {
     public static void main(String[] args) {
-        // try {
-        //  UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-        // } catch (Exception e) { }
 
         final JDisk Disk = new JDisk();
         JFrame frame = new JFrame("Disk");
@@ -199,25 +187,11 @@ public class Main {
         frame.pack();
         frame.setVisible(true);
 
-        clear.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                Disk.clearDisks();
-            }
-        });
+        clear.addActionListener(e -> Disk.clearDisks());
 
-        quit.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                System.exit(0);
-            }
-        });
+        quit.addActionListener(e -> System.exit(0));
 
         frame.pack();
         frame.setVisible(true);
-
-        Disk.addDiskListener(new DiskListenerMain() {
-            public void action(DiskEvent e) {
-
-            }
-        });
     }
 }
