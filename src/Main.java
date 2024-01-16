@@ -17,7 +17,7 @@ interface DiskListenerMain {
     void action(DiskEvent e);
 }
 
-class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotionListener {
+class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotionListener, KeyListener {
 
     Random random = new Random();
 
@@ -31,6 +31,21 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
 
     @Override
     public void mouseMoved(MouseEvent e) {
+
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyPressed(KeyEvent e) {
+
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
 
     }
 
@@ -94,16 +109,7 @@ class JDisk extends JPanel implements ActionListener, MouseListener, MouseMotion
 
 
     public void mousePressed(MouseEvent e) {
-        boolean alreadyDisk = false;
-        for (Disk disk : disks) {
-            if (disk.getCentre().distance(e.getPoint()) <= disk.getRadius()) {
-                alreadyDisk = true;
-                // Move disk
-            }
-        }
-        if (!alreadyDisk) {
-            disks.add(new Disk(e.getPoint(),colors[random.nextInt(colors.length)]));
-        }
+        disks.add(new Disk(e.getPoint(),colors[random.nextInt(colors.length)]));
         repaint();
     }
 
